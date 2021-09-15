@@ -1,6 +1,4 @@
-import { bind } from "core-js/core/function";
-
-const modals = () => {
+const modals = (state) => {
   function bindModal(triggerSelector, modalSelector, closeSelector, closeClickOverlay = true) {  
     const trigger = document.querySelectorAll(triggerSelector),
           modal = document.querySelector(modalSelector),
@@ -12,18 +10,36 @@ const modals = () => {
         item.style.display = 'none';
       });
     }
-    
+   
     trigger.forEach(item => {
       item.addEventListener('click', (e) => {
         if (e.target) {
           e.preventDefault();
         }
+        
+        function showMessage() {
+          let message = document.createElement('div');
+          message.classList.add('status');
+          message.style.cssText = `padding-top: 20px`;
+          message.textContent = "Заполните все поля";
+          item.after(message);
+          setTimeout(() => {
+            message.remove();
+          }, 1000);
+        }
 
-        allWindowsHide();
-  
-        modal.style.display = "block";
-        document.body.style.overflow = "hidden";
-        //document.body.classList.add('modal-open'); //class from bootstrap
+        if (item.getAttribute('data-calc') === "btn-calc" && 
+        (!state.width || !state.height || state.width == 0 || state.height == 0)) {
+          showMessage();
+        } else if (item.getAttribute('data-calc') === "btn-calc-profile" && !state.profile) {
+          showMessage();
+        } else {
+          allWindowsHide();
+
+          modal.style.display = "block";
+          document.body.style.overflow = "hidden";
+          //document.body.classList.add('modal-open'); //class from bootstrap
+        }
       });
     });
 
@@ -46,15 +62,24 @@ const modals = () => {
 
   function showModalByTime(modalSelector) {
     setInterval(() => {
-      document.querySelector(modalSelector).style.display = "block";
-      document.body.style.overflow = "hidden";
+      let openModal = false;
+      document.querySelectorAll('[data-modal]').forEach(item => {
+        if (item.style.display === 'block') {
+          openModal = true;
+        }
+      });
+        if (!openModal) {
+          document.querySelector(modalSelector).style.display = "block";
+          document.body.style.overflow = "hidden";
+        }
     }, 60000);
   }
 
   bindModal('.popup_engineer_btn', '.popup_engineer', '.popup_engineer .popup_close');
   bindModal('.phone_link', '.popup', '.popup .popup_close');
   bindModal('.popup_calc_btn', '.popup_calc', '.popup_calc_close', false);
-  bindModal('.popup_calc_button', '.popup_calc_profile', '.popup_calc_profile_close');
+  bindModal('.popup_calc_button', '.popup_calc_profile', '.popup_calc_profile_close', false);
+  bindModal('.popup_calc_profile_button', '.popup_calc_end', '.popup_calc_end_close', false);
 
   showModalByTime('.popup');
 
